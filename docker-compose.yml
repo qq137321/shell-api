@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+  one-api:
+    image: akl7777777/one-api-private:v0.4.1
+    container_name: one-api
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    environment:
+      - SQL_DSN=root:XXXXXXX@tcp(localhost:3306)/oneapi  # 修改此行，或注释掉以使用 SQLite 作为数据库
+      - DW_DB_DSN=root:XXXXXXXX@tcp(localhost:3306)/oneapi  # 修改此行，或注释掉以使用 SQLite 作为聊天记录数仓
+      - TZ=Asia/Shanghai
+    depends_on:
+      - redis
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o \"\\\"success\\\":\\s*true\" | awk -F: '{print $$2}'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
